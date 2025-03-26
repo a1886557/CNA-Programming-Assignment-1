@@ -23,12 +23,6 @@ try:
   # Create a Server Socket
   serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-  # Bind the socket to a port
-  serverSocket.bind(('' , proxyPort))	
-
-  # Start Listening
-  serverSocket.listen(1)
-
   # ~~~~ END CODE INSERT ~~~~
   print ('Created socket')
 except:
@@ -38,6 +32,8 @@ except:
 try:
   # Bind the the server socket to a host and port
   # ~~~~ INSERT CODE ~~~~
+  serverSocket.bind((proxyHost, proxyPort))
+
   # ~~~~ END CODE INSERT ~~~~
   print ('Port is bound')
 except:
@@ -47,6 +43,8 @@ except:
 try:
   # Listen on the server socket
   # ~~~~ INSERT CODE ~~~~
+  serverSocket.listen(1)
+
   # ~~~~ END CODE INSERT ~~~~
   print ('Listening to socket')
 except:
