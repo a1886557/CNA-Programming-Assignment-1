@@ -111,6 +111,8 @@ while True:
     if cacheLocation.endswith('/'):
         cacheLocation = cacheLocation + 'default'
 
+    cacheLocation = re.sub(r'[?=&:]', '', cacheLocation) # Remove '?', '=', ':' and '&' from resource
+
     print ('Cache location:\t\t' + cacheLocation)
 
     fileExists = os.path.isfile(cacheLocation)
