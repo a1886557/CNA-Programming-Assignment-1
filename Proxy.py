@@ -4,6 +4,7 @@ import sys
 import os
 import argparse
 import re
+import time
 
 # 1MB buffer size
 BUFFER_SIZE = 1000000
@@ -111,7 +112,7 @@ while True:
     if cacheLocation.endswith('/'):
         cacheLocation = cacheLocation + 'default'
 
-    cacheLocation = re.sub(r'[?=&:]', '', cacheLocation) # Remove '?', '=', ':' and '&' from resource
+    cacheLocation = re.sub(r'[?=&:]', '', cacheLocation) # Remove '?', '=', ':' and '&' from the cacheLocation
 
     print ('Cache location:\t\t' + cacheLocation)
 
@@ -126,11 +127,31 @@ while True:
     # Send back response to client 
     # ~~~~ INSERT CODE ~~~~
     cacheData = ''.join(cacheData)
-    clientSocket.sendall(cacheData.encode())
+    # Handling Cache-Control Header for max-age=<seconds>
+    maxageFound = re.search(r'Cache-Control:\s*(\S+)?,?\s*max-age=(\d+)', cacheData, re.IGNORECASE) # Find max-age in the cache data (When either it's just max-age in there or there are others)
+
+    if maxageFound:
+      maxAge = int(maxageFound.group(2)) # Grab it from the second group of the regex and convert to int
+      cacheTime = os.path.getmtime(cacheLocation) # Get the cache last time modified in seconds
+      currentTime = time.time() # Get the current time in seconds
+      if (currentTime - cacheTime) < maxAge:
+        print('The cache is still fresh. Sending cached response.')
+        clientSocket.sendall(cacheData.encode())
+
+      else:
+        print('The cache has expired. Revalidating cache with origin server.')
+        # Revalidate the cache by raising an exception to break out of try block.
+        raise Exception('Cache expired. Need to revalidate cache with origin server.')
+
+    else:
+      print('No max-age found in cache. Sending cached response.')
+      clientSocket.sendall(cacheData.encode())
+
     # ~~~~ END CODE INSERT ~~~~
     cacheFile.close()
     print ('Sent to the client:')
     print ('> ' + cacheData)
+
   except:
     # cache miss.  Get resource from origin server
     originServerSocket = None
@@ -185,7 +206,6 @@ while True:
         if not data:
           break
         response += data
-        print(response) # Remove when uploading 
       # ~~~~ END CODE INSERT ~~~~
 
       # Send the response to the client
