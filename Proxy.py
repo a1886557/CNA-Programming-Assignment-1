@@ -183,34 +183,45 @@ while True:
         if not data:
           break
         response += data
+        print(response) # Remove when uploading 
       # ~~~~ END CODE INSERT ~~~~
 
       # Send the response to the client
       # ~~~~ INSERT CODE ~~~~
       clientSocket.sendall(response)
+
+      # To include regarding when allowed to cache a response (such as the no-cache and no-store directives)
+      cacheIt = True
+
+
       # ~~~~ END CODE INSERT ~~~~
 
-      # Create a new file in the cache for the requested file.
-      cacheDir, file = os.path.split(cacheLocation)
-      print ('cached directory ' + cacheDir)
-      if not os.path.exists(cacheDir):
-        os.makedirs(cacheDir)
-      cacheFile = open(cacheLocation, 'wb')
+      if not (response.startswith(b'HTTP/1.1 302') or response.startswith(b'HTTP/1.1 404') or response.startswith(b'HTTP/1.1 307') or cacheIt == True):
+        # Create a new file in the cache for the requested file.
+        cacheDir, file = os.path.split(cacheLocation)
+        print ('cached directory ' + cacheDir)
+        if not os.path.exists(cacheDir):
+          os.makedirs(cacheDir)
+        cacheFile = open(cacheLocation, 'wb')
 
-      # Save origin server response in the cache file
-      # ~~~~ INSERT CODE ~~~~
-      # Set up for different status codes / requirements for caching
-      cacheFile.write(response)
-      # ~~~~ END CODE INSERT ~~~~
-      cacheFile.close()
-      print ('cache file closed')
+        # Save origin server response in the cache file
+        # ~~~~ INSERT CODE ~~~~
+        if response.startswith(b'HTTP/1.1 301'):
+          cacheFile.write(response)
+        
+        else:
+          cacheFile.write(response)
+        # ~~~~ END CODE INSERT ~~~~
+        cacheFile.close()
+        print ('cache file closed')
 
       # finished communicating with origin server - shutdown socket writes
       print ('origin response received. Closing sockets')
       originServerSocket.close()
-       
+      
       clientSocket.shutdown(socket.SHUT_WR)
       print ('client socket shutdown for writing')
+        
     except OSError as err:
       print ('origin server request failed. ' + err.strerror)
 
