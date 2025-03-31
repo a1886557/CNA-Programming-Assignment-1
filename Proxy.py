@@ -213,12 +213,17 @@ while True:
       clientSocket.sendall(response)
 
       # For Cache-Control header check
-      cacheIt = True
-      responseString = response.decode('utf-8')  
+      try:
+        cacheIt = True
+        responseString = response.decode('utf-8')  
 
-      if re.search(r'Cache-Control:\s*(no-store|private)', responseString, re.IGNORECASE):
-        cacheIt = False
-        
+        if re.search(r'Cache-Control:\s*(no-store|private)', responseString, re.IGNORECASE):
+          cacheIt = False
+    
+      except UnicodeDecodeError:
+        print('Failed to decode the response. Ending connection.')
+        originServerSocket.close()
+        clientSocket.shutdown(socket.SHUT_WR)
       # ~~~~ END CODE INSERT ~~~~
 
       if cacheIt == True and not (response.startswith(b'HTTP/1.1 302') or response.startswith(b'HTTP/1.1 404') or response.startswith(b'HTTP/1.1 307')):
