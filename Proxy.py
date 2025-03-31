@@ -190,13 +190,16 @@ while True:
       # ~~~~ INSERT CODE ~~~~
       clientSocket.sendall(response)
 
-      # To include regarding when allowed to cache a response (such as the no-cache and no-store directives)
+      # For Cache-Control header check
       cacheIt = True
+      responseString = response.decode('utf-8')  
 
-
+      if re.search(r'Cache-Control:\s*(no-store|private)', responseString, re.IGNORECASE):
+        cacheIt = False
+        
       # ~~~~ END CODE INSERT ~~~~
 
-      if not (response.startswith(b'HTTP/1.1 302') or response.startswith(b'HTTP/1.1 404') or response.startswith(b'HTTP/1.1 307') or cacheIt == True):
+      if cacheIt == True and not (response.startswith(b'HTTP/1.1 302') or response.startswith(b'HTTP/1.1 404') or response.startswith(b'HTTP/1.1 307')):
         # Create a new file in the cache for the requested file.
         cacheDir, file = os.path.split(cacheLocation)
         print ('cached directory ' + cacheDir)
@@ -206,11 +209,7 @@ while True:
 
         # Save origin server response in the cache file
         # ~~~~ INSERT CODE ~~~~
-        if response.startswith(b'HTTP/1.1 301'):
-          cacheFile.write(response)
-        
-        else:
-          cacheFile.write(response)
+        cacheFile.write(response)
         # ~~~~ END CODE INSERT ~~~~
         cacheFile.close()
         print ('cache file closed')
